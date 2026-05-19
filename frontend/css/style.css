@@ -1,0 +1,137 @@
+:root {
+    --primary-color: #00a8ff;
+    --secondary-color: #fbc531;
+    --dark-bg: #121212;
+    --dark-surface: #1e272e;
+    --text-main: #f5f6fa;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.auth-bg {
+    background: linear-gradient(135deg, #1e272e 0%, #2f3640 100%);
+    min-height: 100vh;
+}
+
+.dashboard-bg {
+    background-color: var(--dark-bg);
+}
+
+.glassmorphism {
+    background: rgba(30, 39, 46, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+}
+
+.glassmorphism-sidebar {
+    background: rgba(18, 18, 18, 0.95);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 450px;
+}
+
+/* Sidebar */
+#wrapper {
+    overflow-x: hidden;
+}
+
+#sidebar-wrapper {
+    min-height: 100vh;
+    width: 250px;
+    transition: margin .25s ease-out;
+}
+
+#sidebar-wrapper .list-group-item {
+    border: none;
+    padding: 1rem 1.5rem;
+    transition: all 0.3s;
+}
+
+#sidebar-wrapper .list-group-item:hover,
+#sidebar-wrapper .list-group-item.active {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px;
+    margin: 0 10px;
+}
+
+#page-content-wrapper {
+    min-width: 100vw;
+}
+
+@media (min-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: 0;
+    }
+    #page-content-wrapper {
+        min-width: 0;
+        width: 100%;
+    }
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: -250px;
+    }
+}
+
+.glass-card {
+    background: rgba(30, 39, 46, 0.6) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.custom-table th {
+    background-color: rgba(0, 0, 0, 0.2);
+    color: var(--secondary-color);
+    font-weight: 600;
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.custom-table td {
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.custom-table tbody tr {
+    transition: all 0.2s;
+}
+
+.custom-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    transform: scale(1.01);
+}
+
+.btn-animate {
+    transition: transform 0.2s;
+}
+
+.btn-animate:hover {
+    transform: translateY(-2px);
+}
+
+.form-floating > label {
+    color: #a4b0be;
+}
+.form-floating > .form-control {
+    background-color: rgba(0,0,0,0.2);
+    border-color: rgba(255,255,255,0.1);
+    color: white;
+}
+.form-floating > .form-control:focus {
+    background-color: rgba(0,0,0,0.4);
+    color: white;
+    box-shadow: 0 0 0 0.25rem rgba(0,168,255,0.25);
+    border-color: rgba(0,168,255,0.5);
+}
+
+/* Fix for Webkit autofill in dark mode */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #2f3640 inset !important;
+    -webkit-text-fill-color: white !important;
+}
