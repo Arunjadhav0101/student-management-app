@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://student-alb-531848088.us-east-1.elb.amazonaws.com/api';
 
 const alertBox = document.getElementById('alertBox');
 const showAlert = (msg, type) => {
