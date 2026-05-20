@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://student-alb-531848088.us-east-1.elb.amazonaws.com';
 const token = localStorage.getItem('token');
 const username = localStorage.getItem('username');
 
