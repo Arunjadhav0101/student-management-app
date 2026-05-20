@@ -53,3 +53,113 @@ To automate this, configure a pipeline to:
 1. Build Docker images.
 2. Push to Amazon ECR.
 3. Trigger an EC2 Auto Scaling instance refresh or ECS service update.
+
+## Backend Deployment Script
+
+The following shell script can be used in your EC2 User Data or executed manually to set up the backend environment, deploy the app, and configure monitoring on the EC2 instance:
+
+```bash
+#!/bin/bash
+
+LOG_FILE="/home/ubuntu/backend-setup.log"
+
+echo "==============================" >> $LOG_FILE
+echo "SETUP STARTED $(date)" >> $LOG_FILE
+
+# Update packages
+apt update -y >> $LOG_FILE 2>&1
+
+# Install Node.js 20
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash - >> $LOG_FILE 2>&1
+
+# Install required packages
+apt install -y nodejs git >> $LOG_FILE 2>&1
+
+# Install PM2 globally
+npm install -g pm2 >> $LOG_FILE 2>&1
+
+# Switch to ubuntu home
+cd /home/ubuntu || exit
+
+# Clone project if not exists
+if [ ! -d "student-management-app" ]; then
+    git clone https://github.com/Arunjadhav0101/student-management-app.git >> $LOG_FILE 2>&1
+fi
+
+# Go to backend directory
+cd /home/ubuntu/student-management-app/backend || exit
+
+# Install dependencies
+npm install >> $LOG_FILE 2>&1
+
+# Create .env file
+cat <<EOF > .env
+PORT=3000
+DB_HOST=student-db.cwjaqaia2aqp.us-east-1.rds.amazonaws.com
+DB_USER=admin
+DB_PASSWORD=admin9890
+DB_NAME=student-db
+EOF
+
+# Give ubuntu ownership
+chown -R ubuntu:ubuntu /home/ubuntu/student-management-app
+
+# Start backend using ubuntu user
+sudo -u ubuntu pm2 delete backend >> $LOG_FILE 2>&1
+
+sudo -u ubuntu pm2 start server.js --name backend >> $LOG_FILE 2>&1
+
+# Save PM2 process
+sudo -u ubuntu pm2 save >> $LOG_FILE 2>&1
+
+# Enable PM2 startup
+env PATH=$PATH:/usr/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu >> $LOG_FILE 2>&1
+
+# Save again
+sudo -u ubuntu pm2 save >> $LOG_FILE 2>&1
+
+# =========================
+# Create monitoring script
+# =========================
+
+cat <<'EOF' > /home/ubuntu/monitor-backend.sh
+#!/bin/bash
+
+LOG_FILE="/home/ubuntu/backend-monitor.log"
+
+echo "==========================" >> $LOG_FILE
+echo "Checking backend $(date)" >> $LOG_FILE
+
+# Check PM2 process
+PM2_STATUS=$(sudo -u ubuntu pm2 list | grep backend)
+
+if [ -z "$PM2_STATUS" ]; then
+    echo "Backend not running. Restarting..." >> $LOG_FILE
+
+    cd /home/ubuntu/student-management-app/backend || exit
+
+    sudo -u ubuntu pm2 start server.js --name backend >> $LOG_FILE 2>&1
+
+    sudo -u ubuntu pm2 save >> $LOG_FILE 2>&1
+fi
+
+# Check port 3000
+PORT_STATUS=$(ss -tulnp | grep 3000)
+
+if [ -z "$PORT_STATUS" ]; then
+    echo "Port 3000 is down. Restarting..." >> $LOG_FILE
+
+    sudo -u ubuntu pm2 restart backend >> $LOG_FILE 2>&1
+else
+    echo "Port 3000 active." >> $LOG_FILE
+fi
+EOF
+
+# Make executable
+chmod +x /home/ubuntu/monitor-backend.sh
+
+# Add cron job for ubuntu user
+sudo -u ubuntu bash -c '(crontab -l 2>/dev/null; echo "* * * * * /home/ubuntu/monitor-backend.sh") | crontab -'
+
+echo "SETUP COMPLETED $(date)" >> $LOG_FILE
+```
