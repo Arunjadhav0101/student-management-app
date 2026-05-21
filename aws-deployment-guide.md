@@ -73,7 +73,7 @@ apt update -y >> $LOG_FILE 2>&1
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash - >> $LOG_FILE 2>&1
 
 # Install required packages
-apt install -y nodejs git >> $LOG_FILE 2>&1
+apt install -y nodejs git mysql-client >> $LOG_FILE 2>&1
 
 # Install PM2 globally
 npm install -g pm2 >> $LOG_FILE 2>&1
@@ -89,24 +89,53 @@ fi
 # Go to backend directory
 cd /home/ubuntu/student-management-app/backend || exit
 
+# =========================
+# Create Database in RDS
+# =========================
+
+mysql -h databasedb.cwjaqaia2aqp.us-east-1.rds.amazonaws.com \
+-u admin \
+-padmin9890 <<EOF
+
+CREATE DATABASE IF NOT EXISTS student_db;
+
+EOF
+
+# =========================
+# Import SQL Tables
+# =========================
+
+if [ -f "/home/ubuntu/student-management-app/backend/database/schema.sql" ]; then
+
+    echo "Importing schema.sql..." >> $LOG_FILE
+
+    mysql -h databasedb.cwjaqaia2aqp.us-east-1.rds.amazonaws.com \
+    -u admin \
+    -padmin9890 student_db < /home/ubuntu/student-management-app/backend/database/schema.sql >> $LOG_FILE 2>&1
+
+else
+    echo "schema.sql file not found!" >> $LOG_FILE
+fi
+
 # Install dependencies
 npm install >> $LOG_FILE 2>&1
 
 # Create .env file
 cat <<EOF > .env
 PORT=3000
-DB_HOST=student-db.cwjaqaia2aqp.us-east-1.rds.amazonaws.com
+DB_HOST=databasedb.cwjaqaia2aqp.us-east-1.rds.amazonaws.com
 DB_USER=admin
 DB_PASSWORD=admin9890
-DB_NAME=student-db
+DB_NAME=student_db
 EOF
 
 # Give ubuntu ownership
 chown -R ubuntu:ubuntu /home/ubuntu/student-management-app
 
-# Start backend using ubuntu user
+# Delete old PM2 process if exists
 sudo -u ubuntu pm2 delete backend >> $LOG_FILE 2>&1
 
+# Start backend using ubuntu user
 sudo -u ubuntu pm2 start server.js --name backend >> $LOG_FILE 2>&1
 
 # Save PM2 process
@@ -160,6 +189,8 @@ chmod +x /home/ubuntu/monitor-backend.sh
 
 # Add cron job for ubuntu user
 sudo -u ubuntu bash -c '(crontab -l 2>/dev/null; echo "* * * * * /home/ubuntu/monitor-backend.sh") | crontab -'
+
+echo "SETUP COMPLETED $(date)" >> $LOG_FILE
 
 echo "SETUP COMPLETED $(date)" >> $LOG_FILE
 ```
